@@ -20,6 +20,14 @@ class PacketTest(unittest.TestCase):
         self.assertTrue({row['plot'] for row in doc['picks'] + doc['notices']} <= plots)
         self.assertTrue(min(row['known'] for row in doc['picks'] if row['final']) < max(row['known'] for row in doc['picks'] if row['final']))
 
+    def test_final_pick_can_follow_notice(self):
+        packet = read_packet(Path("资料/演练.json"))
+        acknowledged = {row['plot']: row['issue'] for row in packet['notices']
+                        if row['status'] == 'acknowledged'}
+        self.assertTrue(any(row['final'] and row['plot'] in acknowledged
+                            and acknowledged[row['plot']] < row['known']
+                            for row in packet['picks']))
+
     def test_reject_wrong_container(self):
         with TemporaryDirectory() as folder:
             packet = Path(folder) / "unexpected.json"
